@@ -102,8 +102,37 @@ object Stream {
     if (as.isEmpty) empty 
     else cons(as.head, apply(as.tail: _*))
 
-  val ones: Stream[Int] = Stream.cons(1, ones)
-  def from(n: Int): Stream[Int] = ???
+  val ones: Stream[Int] = cons(1, ones)
 
-  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = ???
+  def constant[A](e: A): Stream[A] = {
+    lazy val tail: Stream[A] = Cons(() => e, () => tail)
+    tail
+  }
+
+  def fibs(n1: Int = 0, n2: Int = 1): Stream[Int] = {
+    cons(n1, fibs(n1, n1+n2))
+  }
+
+  def from(n: Int): Stream[Int] = cons(n, from(n+1))
+
+  def unfold[A, S](z: S)(f: S => Option[(A, S)]): Stream[A] = {
+    f(z) match {
+      case Some((v, e)) => cons(v, unfold(e)(f))
+      case _ => Stream.empty[A]
+    }
+  }
+
+  val fibs2: Stream[Int] = {
+    unfold((0, 1))({ case (n1, n2) => Some(n1, (n1, n1+n2)) })
+  }
+
+  def from2(n: Int): Stream[Int] = {
+    unfold(n)(n => Some((n, n+1)))
+  }
+
+  def constant2[A](e: A): Stream[A] = {
+    unfold(e)(e => Some((e, e)))
+  }
+
+  def ones2: Stream[Int] = constant2(1)
 }
